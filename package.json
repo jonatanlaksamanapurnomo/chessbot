@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "start-dev": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
@@ -13,7 +14,8 @@
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "forever": "^3.0.2",
     "nodemon": "^2.0.6",
-    "stockfish": "^10.0.2"
+    "stockfish": "^11.0.0"
   }
 }

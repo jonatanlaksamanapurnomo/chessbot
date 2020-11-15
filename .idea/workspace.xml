@@ -1,13 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="310bdbdd-3513-40c8-9827-2fc37889963e" name="Default Changelist" comment="" />
+    <list default="true" id="310bdbdd-3513-40c8-9827-2fc37889963e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chess.js" beforeDir="false" afterPath="$PROJECT_DIR$/chess.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/stockfish/.travis.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/stockfish/Top CPU Contributors.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/stockfish/appveyor.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/stockfish/build.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/stockfish/build.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/stockfish/load_engine.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/stockfish/load_engine.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/stockfish/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/stockfish/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/stockfish/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/stockfish/readme.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/stockfish/src/stockfish.asm.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/stockfish/src/stockfish.asm.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/stockfish/src/stockfish.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/stockfish/src/stockfish.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/node_modules/stockfish/src/stockfish.wasm" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/stockfish/src/stockfish.wasm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="ProjectId" id="1kH7Q3P4plcYoqRBsSnSMjQ4qeQ" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -34,7 +54,9 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1605345645473</updated>
-      <workItem from="1605345648525" duration="6533000" />
+      <workItem from="1605345648525" duration="8232000" />
+      <workItem from="1605361347527" duration="2401000" />
+      <workItem from="1605423599652" duration="3625000" />
     </task>
     <servers />
   </component>

@@ -13,7 +13,7 @@ let stockfish = STOCKFISH();
 
 function makeMove(fen) {
     stockfish.postMessage("position fen " + fen);
-    stockfish.postMessage("go depth 15");
+    stockfish.postMessage('go depth 19');
 }
 
 app.get('/', (req, res) => {
