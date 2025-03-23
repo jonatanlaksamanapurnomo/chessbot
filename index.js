@@ -9,97 +9,105 @@ app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({extended: true})); // for parsing application/x-www-form-urlencoded
 app.use(cors());
 
-// Lichess API endpoints
-const LICHESS_OPENING_URL = "https://explorer.lichess.ovh/master";
-const LICHESS_CLOUD_EVAL_URL = "https://lichess.org/api/cloud-eval";
+// Stockfish Online REST API endpoint
+const STOCKFISH_API_URL = "https://stockfish.online/api/s/v2.php";
 
 // Basic route
 app.get('/', (req, res) => {
     res.send('Chess Analysis Server is running!');
 });
 
-// Get best move using Lichess cloud evaluation
+// Get best move using Stockfish Online API
 app.post('/bestmove/', async (req, res) => {
     let fenString = req.body.fenString;
 
+    // Complete the FEN string if it's partial
+    if (fenString.split(' ').length < 6) {
+        // If the FEN only has the piece placement and active color
+        if (fenString.split(' ').length === 2) {
+            // Add castling rights, en passant, halfmove and fullmove
+            fenString += ' KQkq - 0 1';
+        }
+        // If the FEN only has piece placement
+        else if (fenString.split(' ').length === 1) {
+            // Add active color, castling rights, en passant, halfmove and fullmove
+            fenString += ' w KQkq - 0 1';
+        }
+    }
+
+    console.log('Sending FEN to API:', fenString);
+
     try {
-        // Call Lichess cloud evaluation API
-        const response = await axios.get(LICHESS_CLOUD_EVAL_URL, {
+        // Call Stockfish Online API
+        const response = await axios.get(STOCKFISH_API_URL, {
             params: {
                 fen: fenString,
-                multiPv: 1
-            },
-            headers: {
-                'Accept': 'application/json'
+                depth: 15 // Use the same depth as your original code
             }
         });
 
         // Extract the best move from the response
-        if (response.data && response.data.pvs && response.data.pvs.length > 0) {
-            // The first move in the principal variation is the best move
-            let bestMove = response.data.pvs[0].moves.split(' ')[0];
+        if (response.data && response.data.success && response.data.bestmove) {
+            // The bestmove field might be in format "bestmove e2e4" or just "e2e4"
+            let bestMove = response.data.bestmove;
+            if (bestMove.includes(' ')) {
+                bestMove = bestMove.split(' ')[1];
+            }
             res.send(bestMove);
         } else {
-            res.status(404).send('No best move found in the analysis');
+            console.error('API returned unexpected format:', response.data);
+            res.status(500).send('Unexpected API response format');
         }
     } catch (error) {
         console.error('Error analyzing position:', error.message);
-
-        // If cloud eval fails, fallback to opening database
-        try {
-            const openingResponse = await axios.get(LICHESS_OPENING_URL, {
-                params: {
-                    fen: fenString,
-                    moves: 10
-                }
-            });
-
-            if (openingResponse.data && openingResponse.data.moves && openingResponse.data.moves.length > 0) {
-                // Sort moves by win rate and popularity
-                const bestMoves = openingResponse.data.moves.sort((a, b) => {
-                    // Calculate win rate (white wins + 0.5 * draws)
-                    const aWinRate = (a.white + 0.5 * a.draws) / (a.white + a.black + a.draws);
-                    const bWinRate = (b.white + 0.5 * b.draws) / (b.white + b.black + b.draws);
-
-                    // Sort by win rate first, then by games played
-                    return bWinRate - aWinRate || (b.white + b.black + b.draws) - (a.white + a.black + a.draws);
-                });
-
-                res.send(bestMoves[0].uci);
-            } else {
-                res.status(404).send('No moves found in opening database');
-            }
-        } catch (openingError) {
-            console.error('Error querying opening database:', openingError.message);
-            res.status(500).send('Error analyzing position');
-        }
+        res.status(500).send('Error analyzing position: ' + error.message);
     }
 });
 
-// Get opening information from Lichess database
-app.post('/opening/', async (req, res) => {
+// Advanced analysis endpoint
+app.post('/analyze/', async (req, res) => {
     let fenString = req.body.fenString;
+    let depth = req.body.depth || 19;
+
+    // Complete the FEN string if it's partial
+    if (fenString.split(' ').length < 6) {
+        // If the FEN only has the piece placement and active color
+        if (fenString.split(' ').length === 2) {
+            // Add castling rights, en passant, halfmove and fullmove
+            fenString += ' KQkq - 0 1';
+        }
+        // If the FEN only has piece placement
+        else if (fenString.split(' ').length === 1) {
+            // Add active color, castling rights, en passant, halfmove and fullmove
+            fenString += ' w KQkq - 0 1';
+        }
+    }
+
+    console.log('Sending FEN for analysis:', fenString);
 
     try {
-        const response = await axios.get(LICHESS_OPENING_URL, {
+        const response = await axios.get(STOCKFISH_API_URL, {
             params: {
                 fen: fenString,
-                moves: 5
+                depth: depth
             }
         });
 
-        if (response.data) {
+        if (response.data && response.data.success) {
+            // Return the full analysis data
             res.json({
-                opening: response.data.opening,
-                moves: response.data.moves,
-                topGames: response.data.topGames
+                evaluation: response.data.evaluation,
+                bestMove: response.data.bestmove,
+                continuation: response.data.continuation,
+                mate: response.data.mate
             });
         } else {
-            res.status(404).send('Opening not found');
+            console.error('API returned unsuccessful response:', response.data);
+            res.status(500).send('API returned unsuccessful response: ' + (response.data.error || 'Unknown error'));
         }
     } catch (error) {
-        console.error('Error fetching opening data:', error.message);
-        res.status(500).send('Error fetching opening data');
+        console.error('Error performing analysis:', error.message);
+        res.status(500).send('Error performing analysis');
     }
 });
 
