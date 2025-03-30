@@ -476,9 +476,9 @@ function toggleLearningMode() {
 }
 
 function textToSpeech(message) {
-    let msg = new SpeechSynthesisUtterance();
-    msg.text = message;
-    window.speechSynthesis.speak(msg);
+    // let msg = new SpeechSynthesisUtterance();
+    // msg.text = message;
+    // window.speechSynthesis.speak(msg);
 }
 
 // Initialize or update the chess assistant

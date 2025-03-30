@@ -18,10 +18,33 @@ function getActualBoard() {
         domBoard;
 }
 
+// Better function to detect if the board is flipped
+function isBoardFlipped() {
+    // First try to get the actual board
+    const board = getActualBoard();
+    if (!board) return false;
+
+    // Check if board has the flipped class
+    if (board.classList.contains("flipped")) {
+        return true;
+    }
+
+    // Also check player side as a backup indicator
+    const playerSide = getPlayerSide();
+    const isBlack = playerSide === "b";
+
+    return isBlack;
+}
+
 // Improved function to determine which side the player is on
 function getPlayerSide() {
     const board = getActualBoard();
     if (!board) return "w";
+
+    // First check if the board is flipped - this is a strong indicator for black
+    if (board.classList.contains("flipped")) {
+        return "b";
+    }
 
     // Check for white and black pieces
     const whitePieces = board.querySelectorAll(".piece[class*='wp'], .piece[class*='wr'], .piece[class*='wn'], .piece[class*='wb'], .piece[class*='wq'], .piece[class*='wk']");
@@ -49,7 +72,7 @@ function getPlayerSide() {
         }
     }
 
-    // If there are more black pieces on the bottom, player is likely black
+    // If there are more black pieces on the bottom, player is black
     return blackPiecesOnBottom > whitePiecesOnBottom ? "b" : "w";
 }
 
@@ -74,6 +97,7 @@ function injected() {
 function boardToFEN(board) {
     let FENstr = "";
     let emptyCounter = 0;
+
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
             let curPiece = board[7 - i][j];
@@ -93,7 +117,11 @@ function boardToFEN(board) {
         }
         FENstr += "/";
     }
-    return FENstr.substr(0, FENstr.length - 1) + " " + side();
+
+    // Get the correct player side
+    const playerSide = getPlayerSide();
+
+    return FENstr.substr(0, FENstr.length - 1) + " " + playerSide;
 }
 
 function getBoard() {
@@ -179,14 +207,17 @@ function getExplanation(fen, move) {
 function algebraicToCoordinates(algebraic) {
     if (!algebraic || algebraic.length < 4) return null;
 
+    // Clean the move string - remove any spaces or special characters
+    const cleanMove = algebraic.replace(/\s+/g, '').trim();
+
+    // Parse the algebraic notation
     const files = "abcdefgh";
-    const fromFile = files.indexOf(algebraic[0]);
-    const fromRank = parseInt(algebraic[1]) - 1; // 0-7 rank
-    const toFile = files.indexOf(algebraic[2]);
-    const toRank = parseInt(algebraic[3]) - 1; // 0-7 rank
+    const fromFile = files.indexOf(cleanMove[0].toLowerCase());
+    const fromRank = parseInt(cleanMove[1]) - 1; // 0-7 rank
+    const toFile = files.indexOf(cleanMove[2].toLowerCase());
+    const toRank = parseInt(cleanMove[3]) - 1; // 0-7 rank
 
     if (fromFile < 0 || toFile < 0 || fromRank < 0 || fromRank > 7 || toRank < 0 || toRank > 7) {
-        console.error("Invalid algebraic notation:", algebraic);
         return null;
     }
 
@@ -202,31 +233,15 @@ function highlightMoveSquares(fromFile, fromRank, toFile, toRank) {
 
     const board = getActualBoard();
     if (!board) {
-        console.error("Chess board not found");
         return;
     }
 
-    // Determine player side and board orientation
-    const playerSide = getPlayerSide();
-    const isFlipped = board.classList.contains("flipped");
-
-    // Convert algebraic coordinates (0-7) to square notation (1-8)
-    // Chess.com uses square-XY class format where X=file (1-8) and Y=rank (1-8)
+    // When we're playing as black (or the board is flipped), we need to flip the move
     let fromSquare, toSquare;
 
-    // Calculate square coordinates based on player side and board orientation
-    if (isFlipped) {
-        // Flipped board - notation is reversed
-        fromSquare = `${8 - fromFile}${8 - fromRank}`;
-        toSquare = `${8 - toFile}${8 - toRank}`;
-    } else {
-        // Standard orientation
-        fromSquare = `${fromFile + 1}${fromRank + 1}`;
-        toSquare = `${toFile + 1}${toRank + 1}`;
-    }
-
-    console.log(`Player side: ${playerSide}, Flipped: ${isFlipped}`);
-    console.log(`Highlighting move from square-${fromSquare} to square-${toSquare}`);
+    // Convert to chess.com square notation (1-8 instead of 0-7)
+    fromSquare = `${fromFile + 1}${fromRank + 1}`;
+    toSquare = `${toFile + 1}${toRank + 1}`;
 
     // Create highlight for "from" square
     const fromHighlight = document.createElement("div");
@@ -254,7 +269,6 @@ function createExplanationElement() {
         // Find the chess board element
         const actualBoard = getActualBoard();
         if (!actualBoard) {
-            console.error("Chess board not found");
             return;
         }
 
@@ -280,9 +294,6 @@ function createExplanationElement() {
             const boardWrapper = actualBoard.parentNode;
             boardWrapper.style.position = "relative"; // Ensure parent has relative positioning
             boardWrapper.appendChild(explanationBox);
-            console.log("Chess Assistant: Explanation box added");
-        } else {
-            console.error("Could not find a suitable parent for the explanation box");
         }
     }
 }
@@ -315,26 +326,28 @@ function hideExplanation() {
 
 // Process the best move response
 async function processBestMove(move, fen) {
-    console.log("Best move:", move);
     lastSuggestedMove = move;
 
     // Make sure the move is in proper format for visualization
     if (move && move.length >= 4) {
+        // Clean up the move string - it might have extra characters
+        const cleanMove = move.replace(/\s+/g, '').trim();
+
         // Format looks good for UCI coordinates
-        const coords = algebraicToCoordinates(move);
+        const coords = algebraicToCoordinates(cleanMove);
         if (coords) {
-            console.log(`Visualizing move from ${move}`, coords);
             try {
-                // Use highlightMoveSquares instead of drawMoveArrow
-                highlightMoveSquares(coords.from.file, coords.from.rank, coords.to.file, coords.to.rank);
+                // Use the improved highlighting function
+                highlightMoveSquares(
+                    coords.from.file,
+                    coords.from.rank,
+                    coords.to.file,
+                    coords.to.rank
+                );
             } catch (e) {
-                console.error("Error highlighting move squares:", e);
+                // Error handling without console.log
             }
-        } else {
-            console.warn("Could not parse move coordinates from:", move);
         }
-    } else {
-        console.warn("Move format not suitable for visualization:", move);
     }
 
     // In learning mode, get and show explanation
@@ -343,7 +356,6 @@ async function processBestMove(move, fen) {
             moveExplanation = await getExplanation(fen, move);
             showExplanation(moveExplanation);
         } catch (error) {
-            console.error("Failed to get explanation:", error);
             moveExplanation = "This move helps improve your position.";
             showExplanation(moveExplanation);
         }
@@ -414,7 +426,6 @@ function requestAnalysis() {
             showExplanation(explanationText);
             textToSpeech("Analysis complete");
         } catch (error) {
-            console.error("Failed to parse analysis:", error);
             showExplanation("Failed to analyze position");
         }
     });
@@ -424,7 +435,6 @@ function requestAnalysis() {
 function toggleLearningMode() {
     learningMode = !learningMode;
     const status = learningMode ? "enabled" : "disabled";
-    console.log(`Learning mode ${status}`);
     textToSpeech(`Learning mode ${status}`);
 
     // Show or hide explanation based on learning mode
@@ -436,9 +446,9 @@ function toggleLearningMode() {
 }
 
 function textToSpeech(message) {
-    let msg = new SpeechSynthesisUtterance();
-    msg.text = message;
-    window.speechSynthesis.speak(msg);
+    // let msg = new SpeechSynthesisUtterance();
+    // msg.text = message;
+    // window.speechSynthesis.speak(msg);
 }
 
 // Initialize or update the chess assistant
@@ -450,7 +460,6 @@ function initializeChessAssistant() {
 
         // Create explanation element
         createExplanationElement();
-        console.log("Chess Assistant: Initialized");
 
         // If there's an active move suggestion, redraw it
         if (lastSuggestedMove && lastSuggestedMove.length >= 4) {
@@ -460,7 +469,7 @@ function initializeChessAssistant() {
             }
         }
     } catch (e) {
-        console.error("Chess Assistant: Error initializing", e);
+        // Error handling without console.log
     }
 }
 
@@ -485,9 +494,8 @@ setTimeout(() => {
     try {
         initializeChessAssistant();
         setupBoardChangeListeners();
-        console.log("Chess Assistant: Initialized");
     } catch (e) {
-        console.error("Chess Assistant: Error initializing", e);
+        // Error handling without console.log
     }
 }, 2000); // Wait for board to fully load
 
@@ -506,7 +514,6 @@ function setupTurnObserver() {
     if (!domClock) {
         domClock = document.querySelector(".clock-bottom");
         if (!domClock) {
-            console.error("Clock element not found, can't setup turn observer");
             return;
         }
     }
@@ -515,7 +522,6 @@ function setupTurnObserver() {
     observer.observe(domClock, {
         attributes: true,
     });
-    console.log("Chess Assistant: Turn observer setup complete");
 }
 
 // Setup the turn observer after initialization
@@ -544,10 +550,3 @@ document.addEventListener("keypress", function (event) {
         hideExplanation();
     }
 });
-
-// Help message on startup
-console.log("Chess Assistant loaded with the following keyboard shortcuts:");
-console.log("Enter - Get move suggestion");
-console.log("L - Toggle learning mode");
-console.log("A - Request detailed position analysis");
-console.log("C - Clear drawings and explanations");
